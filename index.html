@@ -1876,14 +1876,21 @@
   </div>
 </div>
 
-<!-- EmailJS removed — using mailto fallback (works without hosting) -->
+
+<!-- EmailJS SDK -->
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 
 <script>
   // ─────────────────────────────────────────────────────────────────
-  // DEMO BOOKING — mailto: based, works without any hosting
-  // When you go live, swap this for EmailJS or Formspree
+  // EMAILJS SETUP
+  // 1. Go to emailjs.com → sign in
+  // 2. Paste your keys below ↓
   // ─────────────────────────────────────────────────────────────────
-  const DEMO_RECIPIENT = 'chrisvj15@gmail.com';
+  const EMAILJS_PUBLIC_KEY  = 'YOUR_PUBLIC_KEY';   // ← Account → General
+  const EMAILJS_SERVICE_ID  = 'YOUR_SERVICE_ID';   // ← Email Services
+  const EMAILJS_TEMPLATE_ID = 'YOUR_TEMPLATE_ID';  // ← Email Templates
+
+  emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
 
   // ── Mobile menu ─────────────────────────────────
   function toggleMobileMenu() {
@@ -1925,8 +1932,8 @@
     if (e.key === 'Escape') closeDemoModal();
   });
 
-  // ── Form submission via mailto ──────────────────
-  function submitDemoForm() {
+  // ── Form submission via EmailJS ─────────────────
+  async function submitDemoForm() {
     const name    = document.getElementById('demo_name').value.trim();
     const email   = document.getElementById('demo_email').value.trim();
     const company = document.getElementById('demo_company').value.trim();
@@ -1934,53 +1941,45 @@
     const plan    = document.getElementById('demo_plan').value;
     const message = document.getElementById('demo_message').value.trim();
 
-    // Validation
-    if (!name)                        return shake('demo_name',    'Please enter your name');
+    if (!name)                         return shake('demo_name',   'Please enter your name');
     if (!email || !email.includes('@')) return shake('demo_email',  'Please enter a valid email');
-    if (!company)                     return shake('demo_company', 'Please enter your company name');
+    if (!company)                      return shake('demo_company', 'Please enter your company name');
 
     const btn = document.getElementById('demoSubmitBtn');
     btn.disabled = true;
     btn.classList.add('loading');
 
-    const now = new Date();
-    const submitted_at = now.toLocaleDateString('en-GB', {
+    const submitted_at = new Date().toLocaleString('en-GB', {
       weekday: 'long', year: 'numeric', month: 'long',
       day: 'numeric', hour: '2-digit', minute: '2-digit'
     });
 
-    const subject = encodeURIComponent(`🎯 Demo Request — ${name} from ${company}`);
-    const body = encodeURIComponent(
-`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  INKWELL CX — NEW DEMO REQUEST
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    try {
+      await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+        to_email:     'chrisvj15@gmail.com',
+        from_name:    name,
+        from_email:   email,
+        company:      company,
+        team_size:    size    || 'Not specified',
+        plan:         plan    || 'Not specified',
+        message:      message || 'No message provided.',
+        submitted_at: submitted_at,
+      });
 
-  Name ........... ${name}
-  Email .......... ${email}
-  Company ........ ${company}
-  Team Size ...... ${size    || 'Not specified'}
-  Plan Interest .. ${plan    || 'Not specified'}
-
-  Message:
-  ${message || '(No message provided)'}
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  Submitted: ${submitted_at}
-  Source: InkwellCX Landing Page
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`
-    );
-
-    // Open mailto — triggers Gmail / default mail app
-    window.location.href = `mailto:${DEMO_RECIPIENT}?subject=${subject}&body=${body}`;
-
-    // Show success screen after a brief delay
-    setTimeout(() => {
-      btn.disabled = false;
-      btn.classList.remove('loading');
+      // ✅ Success
       document.getElementById('successEmail').textContent = email;
       document.getElementById('modalBody').classList.add('hidden');
       document.getElementById('modalSuccess').classList.add('show');
-    }, 800);
+
+    } catch (err) {
+      console.error('EmailJS error:', err);
+      const errEl = document.getElementById('formError');
+      errEl.textContent = 'Something went wrong. Please email us directly at chrisvj15@gmail.com';
+      errEl.style.display = 'block';
+    } finally {
+      btn.disabled = false;
+      btn.classList.remove('loading');
+    }
   }
 
   // ── Field shake on validation error ────────────
@@ -1992,10 +1991,7 @@
     el.style.animation = 'shakeField 0.35s ease';
     el.setAttribute('placeholder', msg);
     el.focus();
-    setTimeout(() => {
-      el.style.borderColor = '';
-      el.style.animation = '';
-    }, 2500);
+    setTimeout(() => { el.style.borderColor = ''; el.style.animation = ''; }, 2500);
   }
 
   // ── Scroll Reveal ───────────────────────────────
@@ -2038,6 +2034,14 @@
     40%      { transform: translateX(5px); }
     60%      { transform: translateX(-4px); }
     80%      { transform: translateX(3px); }
+  }
+  #formError {
+    display: none;
+    background: rgba(232,82,74,0.07);
+    border: 1px solid rgba(232,82,74,0.2);
+    border-radius: 10px; padding: 0.75rem 1rem;
+    font-size: 0.82rem; color: var(--accent);
+    margin-top: 0.75rem; line-height: 1.5;
   }
 </style>
 
