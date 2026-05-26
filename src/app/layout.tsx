@@ -39,6 +39,9 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [{ url: '/favicon.svg', type: 'image/svg+xml', sizes: 'any' }],
+    other: [
+      { rel: 'manifest', url: '/manifest.json' }
+    ],
   },
   openGraph: {
     title: 'InkwellCX - High-Converting Websites & Web Design Services',

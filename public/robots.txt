@@ -1,6 +1,20 @@
+# Google-Bot specific rules for aggressive crawling
+User-agent: Googlebot
+Allow: /
+Disallow: /.next/
+Disallow: /api/
+Crawl-delay: 0
+
+# All other bots
 User-agent: *
 Allow: /
 Disallow: /.next/
 Disallow: /api/
+Crawl-delay: 1
 
+# Explicitly allow favicon for Google Search appearance
+User-agent: *
+Allow: /favicon.svg
+
+# Sitemap location
 Sitemap: https://inkwellcx.com/sitemap.xml
